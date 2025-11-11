@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <script>
+        var num1 = 0;
+        var num2 = 0;
+        var resultado = 0;
+        var igual = false;
+        var operacion = "";
+        function inicio() {
+            // Control de cambio de skin y asignación de onclick a los botones
+            document.getElementById('skin').onchange = cambiaSkin;
+            var input_botones = document.getElementsByTagName("input");
+            for(var i = 0; i < input_botones.length; i++) {
+                if (input_botones[i].type == "button") {
+                        input_botones[i].onclick = procesa;
+                }
+            }
+
+        }
+        function cambiaSkin() {
+            // Cambio de skin
+            document.getElementById('calculadora').style.backgroundColor = this.value;
+        }
+        function procesa() {
+            // Recoge el valor del botón pulsado
+            var boton = this.value;
+            // Asigna la pantalla
+            var pantalla = document.getElementById('pantalla');
+            var display = pantalla.value;
+            display += boton;
+            // Comprueba si en la pantalla hay error
+            if (display == "Error") {
+                return;
+            }
+            // Si .es el primer carácter
+            if (display == ".") {
+                pantalla.value = "0.";
+                return;
+            }
+            // Si el primer carácter es - seguido de .
+            if (display == "-.") {
+                    pantalla.value = "-0.";
+                    return;                
+            } 
+            // Si el númereo comienza por cero, no admite otro cero detrás
+            if (display == "0" && boton == "0") {
+                return;
+            }
+            // Si el número comienza por cero, y se pulsa otro número detrás
+            if (display == "0" && boton != "0") {
+                pantalla.value = boton;
+                return;
+            }
+            if (/^-?\d*(\.\d*)?$/.test(display)) {
+                // Pinta el número (o el .) en pantalla
+                pantalla.value = display;
+                return;
+            }
+            if (/^[+\-X÷%]$/.test(boton)) {
+                this.style.border = "1px solid yellow";
+                operacion = boton;
+                num1 = Number(pantalla.value);
+                pantalla.value = "";
+                return;
+            }
+            // Si se ha pulsado el botón AC
+            if (boton == "AC") {
+                pantalla.value = "";
+                num1 = 0;
+                num2 = 0;
+                operacion = "";
+                resetBorder();
+                return;
+            }
+            // Si se ha pulsado el botón C
+            if (boton == "C") {
+                if (!operacion == "" && pantalla.value == "") {
+                    pantalla.value = num1;
+                    operacion = "";
+                    resetBorder();
+                    return;
+                }
+                pantalla.value = "";
+                return;
+            }
+            // Si se pulsa el botón +/-
+            if (boton == "+/-" && display != "") {
+                // Si existe una operación pendiente, vuelve
+                pantalla.value = pantalla.value * (-1);
+                return;
+            }
+            // Si se pulsa el botón =
+            if (boton == "=") {
+                igual = true;
+                resetBorder();
+                // Si se pulsa = y no hay operación pendiente
+                if (operacion == "") {
+                    return;
+                }
+                // Si se ha pulsado el = después de un signo de operación
+                if (pantalla.value == "" && operacion != "") {
+                    pantalla.value = "Error";
+                    return;
+                }
+                // Define el tipo de operación
+                num2 = Number(pantalla.value);
+                if (operacion == "+") {
+                    resultado = num1 + num2;
+                }
+                if (operacion == "-") {
+                    resultado = num1 - num2;
+                }
+                if (operacion == "X") {
+                    resultado = num1 * num2;
+                }
+                if (operacion == "÷") {
+                    resultado = num1 / num2;
+                }
+                if (operacion == "%") {
+                    resultado = num1 * num2 / 100;
+                }
+                // Comprueba si el resultado es infinito (división por 0)
+                if (!isFinite(resultado)) {
+                    pantalla.value = "Error";
+                    return;
+                }
+                // muestra el resultado en pantalla
+                // Formatea el resultado por si es exponencial
+                if (Math.abs(resultado) > 1e15 || (Math.abs(resultado) < 1e-5 && resultado !== 0)) {
+                    pantalla.value = resultado.toExponential(4);
+                    return;
+                }
+                // Redondea el resultado a 4 decimales 
+                let redondeado = Math.round(resultado * 1000) / 1000;
+                pantalla.value = redondeado;
+                // Resetea
+                num1 = resultado;
+                num2 = 0;
+                operacion = "";
+                return;
+            }
+            // Comprueba si el botón pulsado anteriormente es el igual
+            if (igual) {
+                igual = false;
+                pantalla.value = "";
+            }
+        }
+        // Función que recoge el valor de la pantalla y pinta un borde en el boton del operador pulsado
+        function resaltaBoton(elemento) {
+            elemento.style.border = "1px solid yellow";
+            // Si el número acaba en . añade un 0
+            if (pantalla.value.endsWith(".")) {
+                pantalla.value += "0";
+            }
+            num1 = Number(pantalla.value);
+            pantalla.value = "";
+            return;
+        }
+        // Función que resetea los bordes de los botones de los operadores
+        function resetBorder() {
+            // resteaa los bordes de los botones
+            document.querySelectorAll('#botones input').forEach(e => e.style.border = "1px solid #666");
+        }
+    </script>
+</head>
+<body onload="inicio()">
+    <form>
+        <!-- Selector del skin -->
+        Selecciona el color de la calculadora:
+        <select id="skin">
+            <option value="#2c3e50">Negro</option>
+            <option value="#c0392b">Rojo</option>
+            <option value="#8e44ad">Morado</option>
+        </select>
+    </form>
+    <br><br>
+    <form id="calculadora">
+        <!-- Calculadora -->
+        <p>Nicasio 3000</p>
+        <input type="text" readonly id="pantalla" placeholder="0">
+        <br><br>
+        <div id="botones">
+            <input type="button" value="AC" class="boton1">
+            <input type="button" value="C" class="boton1">
+            <input type="button" value="+/-" class="boton2">
+            <input type="button" value="%" class="boton2">
+            <br>
+            <input type="button" value="7">
+            <input type="button" value="8">
+            <input type="button" value="9">
+            <input type="button" value="÷" class="boton2">
+            <br>
+            <input type="button" value="4">
+            <input type="button" value="5">
+            <input type="button" value="6">
+            <input type="button" value="X" class="boton2">
+            <br>
+            <input type="button" value="1">
+            <input type="button" value="2">
+            <input type="button" value="3">
+            <input type="button" value="-" class="boton2">
+            <br>
+            <input type="button" value="0">
+            <input type="button" value=".">
+            <input type="button" value="=" class="boton3">
+            <input type="button" value="+" class="boton2">
+        </div>
+        <br>
+        <br>
+        <hr>
+        <hr style="width: 70%">
+        <hr style="width: 50%">
+    </form>
+</body>
+</html>
